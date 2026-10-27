@@ -106,7 +106,7 @@
 
     <p class="rodape">
       Termo de uso: simulação não é aprovação de crédito. Valores estimados pela tabela PRICE, sem descontos do governo,
-      com base nas regras do Minha Casa Minha Vida (FGTS) ou da linha SBPE da CAIXA vigentes em <span id="vig"></span>. Como a renda foi informada por faixa,
+      com base nas regras do programa habitacional (FGTS) ou da linha SBPE da CAIXA vigentes em <span id="vig"></span>. Como a renda foi informada por faixa,
       os valores aparecem de/até. Na tabela PRICE a parcela é fixa; o saldo devedor é corrigido mensalmente pela TR,
       conforme o contrato da CAIXA. O valor financiado, a taxa, o seguro e o prazo finais dependem da avaliação do imóvel
       e da análise de crédito da CAIXA. Este simulador não é da CAIXA e não guarda nenhum dado.
@@ -283,7 +283,7 @@ function iniciar() {
       $("rObraFim").textContent = brl(alto.obraFim);
       if (baixo.fin < alto.fin - 1) avisos.push(`O valor depende de onde a renda fica dentro da faixa: vai de ${brl(baixo.fin)} a ${brl(alto.fin)}.`);
       if (prazo < PARAM.prazoMax) avisos.push("Pela idade, o prazo fica menor. Incluir alguém mais novo no financiamento pode aumentar o prazo.");
-      if (sbpe) avisos.push("Pelo seu perfil, o financiamento é por outra linha da CAIXA (fora do Minha Casa Minha Vida). Os juros dela variam de 10% a 15% ao ano conforme o relacionamento com o banco: a simulação usa 12,5%, e a CAIXA financia até 70% do imóvel.");
+      if (sbpe) avisos.push("Pelo seu perfil, o financiamento é por outra linha da CAIXA (fora do programa habitacional). Os juros dela variam de 10% a 15% ao ano conforme o relacionamento com o banco: a simulação usa 12,5%, e a CAIXA financia até 70% do imóvel.");
       if (faixa === 9) avisos.push("Para renda acima de R$ 13 mil, a conta usa R$ 13 mil: com renda maior, o valor financiado sobe.");
       if (q.get("p") === "s") avisos.push("As parcelas que você já paga entram na conta: todas juntas, com a da casa, não passam de 30% da renda. A construtora confere com você.");
       if (outras > 0) avisos.push("Já descontamos as parcelas que você paga hoje: o total não pode passar de 30% da renda.");
