@@ -107,9 +107,11 @@
     <p class="rodape">
       Termo de uso: simulação não é aprovação de crédito. Valores estimados pela tabela PRICE, sem descontos do governo,
       com base nas regras do MCMV (FGTS) ou da linha SBPE da CAIXA vigentes em <span id="vig"></span>. Como a renda foi informada por faixa,
-      os valores aparecem de/até. Na tabela PRICE a parcela é fixa; o saldo devedor é corrigido mensalmente pela TR,
+      os valores aparecem de/até. Na tabela PRICE a parcela é calculada fixa; a TR e o seguro podem alterá-la, e o saldo devedor é corrigido mensalmente pela TR,
       conforme o contrato da CAIXA. O valor financiado, a taxa, o seguro e o prazo finais dependem da avaliação do imóvel
-      e da análise de crédito da CAIXA. Este simulador não é da CAIXA e não guarda nenhum dado.
+      e da análise de crédito da CAIXA. Não inclui o Custo Efetivo Total (CET), informado pela CAIXA na proposta.
+      Este simulador não é da CAIXA e esta página não armazena seus dados; as respostas do atendimento seguem a
+      <a href="privacidade.html" style="color:inherit">Política de Privacidade</a>.
       Responsável: Marcio dos Santos Veiga Ltda, CNPJ 33.763.659/0001-59.
     </p>
   </section>
@@ -316,7 +318,7 @@ function iniciar() {
         $("rProntaPrazo").textContent = `${prazoPronta} meses`;
       }
       if (!pronta && (q.get("t") === "comprar" || q.get("t") === "financiado")) avisos.push("O terreno entra no mesmo financiamento: a CAIXA paga o terreno na assinatura, e os juros sobre ele começam no primeiro mês.");
-      if (q.get("e") === "s") avisos.push("Lembre: com restrição no nome a CAIXA não aprova. Com o nome limpo, esta simulação vale para você.");
+      if (q.get("e") === "s") avisos.push("Lembre: com restrição no nome a CAIXA não aprova. Com o nome limpo, a simulação pode ser refeita para o seu caso.");
     }
   }
   avisos.forEach(t => { const d = document.createElement("div"); d.className = "aviso"; d.textContent = t; $("rAvisos").appendChild(d); });
