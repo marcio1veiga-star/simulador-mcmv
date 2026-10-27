@@ -145,7 +145,9 @@ const PARAM = {
   // Outra linha da CAIXA (SBPE): renda acima de R$ 13 mil ou casa própria na cidade. Marcio, 27/10: taxa de mercado
   // fica entre 10% e 15% conforme o relacionamento; usar 12,5%. PRICE financia até 70%; teto do SFH R$ 2,25 milhões.
   sbpe: { taxa: 12.5, cota: 0.70, teto: 2250000 },
-  outrasParcelas: { "0": 0, "10": 0.10, "20": 0.20, "29": 0.29 }   // P4: limite de cima de cada faixa
+  // P4 simplificada (Marcio, 27/10): só sim/não; o cliente não sabe calcular o %. p=s não desconta, só avisa.
+  // Valores antigos (10/20/29) seguem aceitos para link antigo.
+  outrasParcelas: { "0": 0, "n": 0, "s": 0, "10": 0.10, "20": 0.20, "29": 0.29 }
 };
 
 const $ = id => document.getElementById(id);
@@ -262,6 +264,7 @@ function iniciar() {
       if (prazo < PARAM.prazoMax) avisos.push("Pela idade, o prazo fica menor. Incluir alguém mais novo no financiamento pode aumentar o prazo.");
       if (sbpe) avisos.push("Pelo seu perfil, o financiamento é por outra linha da CAIXA (fora do Minha Casa Minha Vida). Os juros dela variam de 10% a 15% ao ano conforme o relacionamento com o banco: a simulação usa 12,5%, e a CAIXA financia até 70% do imóvel.");
       if (faixa === 9) avisos.push("Para renda acima de R$ 13 mil, a conta usa R$ 13 mil: com renda maior, o valor financiado sobe.");
+      if (q.get("p") === "s") avisos.push("As parcelas que você já paga entram na conta: todas juntas, com a da casa, não passam de 30% da renda. A construtora confere com você.");
       if (outras > 0) avisos.push("Já descontamos as parcelas que você paga hoje: o total não pode passar de 30% da renda.");
       if (pronta) {
         $("cObra").hidden = true;
@@ -285,7 +288,7 @@ function iniciar() {
     t: { quitado: "já tem, quitado", financiado: "já tem, financiado", comprar: "vai comprar" },
     r: ["", "até R$ 2.160", "R$ 2.161 a 2.850", "R$ 2.851 a 3.200", "R$ 3.201 a 3.500", "R$ 3.501 a 4.000",
         "R$ 4.001 a 5.000", "R$ 5.001 a 9.600", "R$ 9.601 a 13.000", "acima de R$ 13.000"],
-    p: { "0": "não tem", "10": "até 10% da renda", "20": "11% a 20% da renda", "29": "21% a 29% da renda" },
+    p: { "0": "não tem", "n": "não tem", "s": "tem (a conferir)", "10": "até 10% da renda", "20": "11% a 20% da renda", "29": "21% a 29% da renda" },
     s: { "1": "sozinho", "2": "2 pessoas", "3": "3 ou mais" },
     sn: { s: "sim", n: "não", x: "não sabe" }
   };
