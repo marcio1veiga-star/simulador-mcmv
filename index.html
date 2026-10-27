@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sua Simulação</title>
+<style>
+  /* Paleta sem azul (pedido do Marcio): verde-escuro, terra e areia */
+  :root {
+    --fundo: #f6f3ec; --cartao: #ffffff; --texto: #1f2a1f; --suave: #5b6b5b; --borda: #d9d3c4;
+    --destaque: #2f6b3a; --destaque-texto: #ffffff; --alerta-fundo: #fff4dc; --alerta-texto: #6b4a00;
+    --zap: #1f8f4e; --vermelho: #b3261e; --vermelho-fundo: #fdecea;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --fundo: #161a16; --cartao: #1f251f; --texto: #eef2ea; --suave: #a9b5a6; --borda: #354035;
+      --destaque: #5fae6c; --destaque-texto: #0f140f; --alerta-fundo: #3a2f12; --alerta-texto: #ffd88a; --zap: #3fbf74;
+      --vermelho: #ff8a80; --vermelho-fundo: #3b1614;
+    }
+  }
+  :root[data-theme="dark"] {
+    --fundo: #161a16; --cartao: #1f251f; --texto: #eef2ea; --suave: #a9b5a6; --borda: #354035;
+    --destaque: #5fae6c; --destaque-texto: #0f140f; --alerta-fundo: #3a2f12; --alerta-texto: #ffd88a; --zap: #3fbf74;
+    --vermelho: #ff8a80; --vermelho-fundo: #3b1614;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fundo); color: var(--texto);
+         font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 560px; margin: 0 auto; padding: 20px 16px 48px; }
+  h1 { font-size: 1.35rem; margin: 0 0 16px; }
+  .cartao { background: var(--cartao); border: 1px solid var(--borda); border-radius: 14px; padding: 18px 16px; margin-bottom: 16px; }
+  .rotulo { color: var(--suave); font-size: .9rem; }
+  .grande { font-size: 2rem; font-weight: 800; line-height: 1.2; margin: 2px 0 8px; }
+  .linha { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--borda); }
+  .linha:last-child { border-bottom: 0; }
+  .linha span:last-child { font-weight: 700; text-align: right; }
+  .aviso { background: var(--alerta-fundo); color: var(--alerta-texto); border-radius: 10px; padding: 12px; margin: 12px 0 0; font-size: .95rem; }
+  .zap { display: block; text-align: center; text-decoration: none; font-weight: 800; padding: 16px;
+         border-radius: 12px; background: var(--zap); color: #fff; margin-top: 12px; }
+  .rodape { color: var(--suave); font-size: .8rem; margin-top: 24px; }
+  .atencao { color: var(--vermelho); background: var(--vermelho-fundo); border: 1px solid var(--vermelho);
+             border-radius: 10px; padding: 12px; font-weight: 700; margin: 0 0 16px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <section id="semDados" class="cartao" hidden>
+    <h1>Simulação pelo WhatsApp</h1>
+    <p>Esta simulação é montada a partir das perguntas do nosso atendimento. Comece por lá:</p>
+    <a id="zapInicio" class="zap" target="_blank" rel="noopener">Começar pelo WhatsApp</a>
+  </section>
+
+  <section id="resultado" hidden>
+    <h1>Sua simulação</h1>
+    <p class="atencao">Somente simulação: os valores se aproximam da realidade, mas não são exatos.
+      Podem mudar para mais ou para menos na análise do banco.</p>
+
+    <div class="cartao" id="cMcmv">
+      <div class="rotulo">Com a sua renda, você pode financiar até</div>
+      <div class="grande" id="rFin"></div>
+      <div class="linha"><span id="lParcela">Parcela depois da casa pronta</span><span id="rParcela"></span></div>
+      <div class="linha"><span id="lImovel">Casa + terreno que cabe no seu perfil</span><span id="rImovel"></span></div>
+      <div class="linha"><span>Prazo</span><span id="rPrazo"></span></div>
+      <div class="linha"><span>Juros ao ano</span><span id="rTaxa"></span></div>
+      <div id="rAvisos"></div>
+    </div>
+
+    <div class="cartao" id="cObra">
+      <strong>Durante a obra</strong>
+      <p class="rotulo" style="margin:4px 0 0">Você paga só os juros sobre o que já foi liberado. A parcela começa em
+        <strong id="rObraIni"></strong> e chega a <strong id="rObraFim"></strong> quando a obra fica pronta.</p>
+    </div>
+
+    <div class="cartao" id="cPronta" hidden>
+      <strong>Se preferir uma casa pronta</strong>
+      <p class="rotulo" style="margin:4px 0 0">Sem fase de obra: a parcela cheia começa no primeiro mês.
+        Parcela de <strong id="rProntaParc"></strong>, em até <strong id="rProntaPrazo"></strong>.</p>
+    </div>
+
+    <div class="cartao" id="cOutra" hidden>
+      <strong>Seu financiamento segue por outra linha da CAIXA, com condições próprias.</strong>
+      <p class="rotulo" style="margin:6px 0 0">O caminho é o mesmo. A construtora te mostra as condições do seu caso.</p>
+    </div>
+
+    <div class="cartao" id="fimConstrutora">
+      Essa é uma estimativa, e quem aprova é a CAIXA. Valores de projeto e acompanhamento de obra são tratados direto
+      com a construtora. A documentação pode ser parcelada em até 12x no cartão. O próximo passo é falar com a
+      construtora para ajustar ao seu caso e enviar os documentos pelo link seguro.
+    </div>
+    <div class="cartao" id="fimCorretor" hidden>
+      Essa é uma estimativa, e quem aprova é a CAIXA. A documentação pode ser parcelada em até 12x no cartão.
+      O próximo passo é falar com o corretor para ver as casas que cabem no seu perfil e enviar os documentos pelo link seguro.
+      <p class="rotulo" style="margin:8px 0 0">Marcio dos Santos Veiga — Corretor de Imóveis — CRECI-MS 14735</p>
+    </div>
+    <a id="zap" class="zap" target="_blank" rel="noopener">Falar c/ construtora</a>
+
+    <p class="rodape">
+      Termo de uso: simulação não é aprovação de crédito. Valores estimados pela tabela PRICE, sem descontos do governo,
+      com base nas regras do Minha Casa Minha Vida (FGTS) ou da linha SBPE da CAIXA vigentes em <span id="vig"></span>. Como a renda foi informada por faixa,
+      os valores aparecem de/até. Na tabela PRICE a parcela é fixa; o saldo devedor é corrigido mensalmente pela TR,
+      conforme o contrato da CAIXA. O valor financiado, a taxa, o seguro e o prazo finais dependem da avaliação do imóvel
+      e da análise de crédito da CAIXA. Este simulador não é da CAIXA e não guarda nenhum dado.
+      Responsável: Marcio dos Santos Veiga Ltda, CNPJ 33.763.659/0001-59.
+    </p>
+  </section>
+</main>
+
+<script>
+// ===== Parâmetros (revisar quando a regra mudar) =====
+const PARAM = {
+  vigencia: "outubro de 2026",
+  zapConstrutora: "5567996836202",   // WhatsApp da construtora (Marcio, 26/10)
+  zapAtendimento: "{{WHATSAPP_ATENDIMENTO}}",   // número da Zarpon (robô)
+  teto: { mcmv12: 210000, f3: 400000, f4: 600000 },   // 4 cidades: REGIC centro de zona/local
+  cota: 0.80,
+  comprometimento: 0.30,          // teto legal: todas as parcelas juntas
+  // A CAIXA financiou, na prática, até ~23,2% da renda no encargo total (8 simulações oficiais, 26/10/2026).
+  comprometimentoCaixa: 0.232,   // aos ~31 anos; sobe com o quadrado da idade acima de 31 (ajustado às sims I e J, sempre abaixo da CAIXA)
+  comprometimentoIdade2: 0.0000088,
+  prazoMax: 420,
+  idadeLimiteMeses: 80 * 12 + 5,   // 80a6m; a CAIXA dá 1 mês a menos (sim I: 356 meses aos 50a9m)
+  prazoObraMeses: 12,        // prazo padrão de obra, confirmado pelo Marcio em 26/10
+  tarifaAdm: 25,
+  rendaIsentaTarifa: 2850,
+  // Seguros calibrados com 8 simulações oficiais (26/10/2026, 30 anos):
+  mip: 0.0000849,            // MIP sobre o saldo aos 30a9m (sim A)
+  mipCrescAno: 1.0758,       // +7,6% por ano de idade (sims I e J: 0,0359% aos 50a9m, 0,0762% aos 60a9m)
+  dfiAte2850: 0.000135,      // DFI sobre o valor do imóvel, renda até R$ 2.850
+  dfiAcima: 0.0000711,       // DFI sobre o valor do imóvel, renda acima
+  // Faixas da triagem (P3): [de, até, taxa não cotista, taxa cotista] — Res. CCFGTS 1148/2026, Centro-Oeste
+  // O "de" da primeira faixa é o piso usado na conta (atualizar com o salário mínimo)
+  faixas: [
+    null,
+    [1518, 2160, 4.75, 4.25],
+    [2160.01, 2850, 5.00, 4.50],
+    [2850.01, 3200, 5.25, 4.75],
+    [3200.01, 3500, 5.50, 5.00],
+    [3500.01, 4000, 6.00, 5.50],
+    [4000.01, 5000, 7.00, 6.50],
+    [5000.01, 9600, 8.16, 7.66],
+    [9600.01, 13000, 9.16, 8.66],    // Faixa 4: cotista 8,66% visto na CAIXA; não cotista deduzido (+0,5)
+    [13000.01, 13000.01, 12.5, 12.5] // 9 = acima de 13.000: SBPE, a conta usa o piso da faixa
+  ],
+  // Outra linha da CAIXA (SBPE): renda acima de R$ 13 mil ou casa própria na cidade. Marcio, 27/10: taxa de mercado
+  // fica entre 10% e 15% conforme o relacionamento; usar 12,5%. PRICE financia até 70%; teto do SFH R$ 2,25 milhões.
+  sbpe: { taxa: 12.5, cota: 0.70, teto: 2250000 },
+  outrasParcelas: { "0": 0, "10": 0.10, "20": 0.20, "29": 0.29 }   // P4: limite de cima de cada faixa
+};
+
+const $ = id => document.getElementById(id);
+const brl = v => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+const pct = v => v.toFixed(2).replace(".", ",") + "%";
+const q = new URLSearchParams(location.search);
+// Varredura 26/10: só aceita chave própria do objeto (p=constructor dava R$ NaN; c=__proto__ ia para o WhatsApp)
+const pega = (obj, k) => k !== null && Object.prototype.hasOwnProperty.call(obj, k) ? obj[k] : undefined;
+// Varredura 26/10: id só com letras, números e hífen, até 20 caracteres (quebra de linha no id forjava linhas do resumo)
+const idSim = String(q.get("id") || "").replace(/[^A-Za-z0-9-]/g, "").slice(0, 20);
+$("vig").textContent = PARAM.vigencia;
+
+// Parâmetros vindos do link da Zarpon:
+// id=SIM-XXXX m=construir|pronta c=chapadao|costarica|paraiso|figueirao t=quitado|financiado|comprar r=1..9 p=0|10|20|29 n=ddmmaaaa f=s|n|x h=s|n e=n|s|x s=1|2|3
+function idadeMeses(n) {
+  const d = String(n || "").replace(/\D/g, "");
+  if (d.length !== 8 && d.length !== 6) return null;
+  let ano = +d.slice(4);
+  if (d.length === 6) ano += ano > 30 ? 1900 : 2000;
+  const dia = +d.slice(0, 2), mes = +d.slice(2, 4);
+  if (dia < 1 || dia > 31 || mes < 1 || mes > 12) return null;
+  const cal = new Date(ano, mes - 1, dia);   // Varredura 26/10: 31/02/1990 passava como válida
+  if (cal.getFullYear() !== ano || cal.getMonth() !== mes - 1 || cal.getDate() !== dia) return null;
+  const hoje = new Date();
+  const meses = (hoje.getFullYear() - ano) * 12 + (hoje.getMonth() + 1 - mes) - (hoje.getDate() < dia ? 1 : 0);
+  return meses >= 18 * 12 && meses <= 100 * 12 ? meses : null;
+}
+
+// Capacidade para uma renda: até onde a parcela cabe, limitado pela cota e pelo teto
+function capacidade(renda, taxa, prazo, outras, teto, idadeAnos, sbpe = false) {
+  const cota = sbpe ? PARAM.sbpe.cota : PARAM.cota;
+  const mip = PARAM.mip * Math.pow(PARAM.mipCrescAno, idadeAnos - 30.75);
+  const i = taxa / 100 / 12;
+  const fator = i / (1 - Math.pow(1 + i, -prazo));    // PRICE
+  // Isenção de tarifa e DFI maior valem só no MCMV
+  const tarifa = !sbpe && renda <= PARAM.rendaIsentaTarifa ? 0 : PARAM.tarifaAdm;
+  const dfi = !sbpe && renda <= PARAM.rendaIsentaTarifa ? PARAM.dfiAte2850 : PARAM.dfiAcima;
+  const encargoMax = Math.max(0, Math.min(PARAM.comprometimentoCaixa + Math.pow(Math.max(0, idadeAnos - 31), 2) * PARAM.comprometimentoIdade2, PARAM.comprometimento - outras) * renda);
+  // O DFI incide sobre o valor do imóvel, que depende do financiado: resolve por aproximação
+  let fin = 0;
+  for (let k = 0; k < 20; k++) {
+    const imovel = Math.min(fin / cota, teto);
+    fin = Math.max(0, Math.min((encargoMax - tarifa - dfi * imovel) / (fator + mip), cota * teto));
+  }
+  const imovel = Math.min(fin / cota, teto);
+  const seguros = s => s * mip + dfi * imovel;
+  return {
+    fin,
+    imovel,
+    parcela: fin * fator + seguros(fin) + tarifa,
+    obraIni: fin * 0.25 * i + seguros(fin * 0.25) + tarifa,
+    obraFim: fin * i + seguros(fin) + tarifa
+  };
+}
+
+function outraLinha() {
+  $("cMcmv").hidden = true;
+  $("cObra").hidden = true;
+  $("cOutra").hidden = false;
+}
+
+function iniciar() {
+  const faixa = /^[1-9]$/.test(q.get("r") || "") ? +q.get("r") : 0;   // Varredura 26/10: r=1.5 quebrava a página
+  if (!idSim || !faixa) {
+    $("semDados").hidden = false;
+    $("zapInicio").href = `https://wa.me/${PARAM.zapAtendimento}`;
+    return;
+  }
+  $("resultado").hidden = false;
+  const avisos = [];
+  // m=pronta é corretagem: identifica o corretor (CRECI), não a construtora
+  const pronta = q.get("m") === "pronta";
+  if (pronta) {
+    $("fimConstrutora").hidden = true;
+    $("fimCorretor").hidden = false;
+    $("zap").textContent = "Falar c/ corretor";
+  }
+
+  {
+    // Casa própria na cidade tira do MCMV: vai para o SBPE com a renda da faixa
+    const sbpe = faixa === 9 || q.get("h") === "s";
+    const [de, ate, tNao, tSim] = PARAM.faixas[faixa];
+    const taxa = sbpe ? PARAM.sbpe.taxa : q.get("f") === "s" ? tSim : tNao;
+    const teto = sbpe ? PARAM.sbpe.teto : faixa <= 6 ? PARAM.teto.mcmv12 : faixa === 7 ? PARAM.teto.f3 : PARAM.teto.f4;
+    const outras = pega(PARAM.outrasParcelas, q.get("p")) || 0;
+
+    // Prazo: idade + obra + financiamento até 80 anos e 6 meses
+    let idade = idadeMeses(q.get("n"));
+    if (idade === null) {
+      idade = 44 * 12;
+      avisos.push("Sem a data de nascimento, a simulação considerou o prazo máximo. A construtora confirma com a sua idade.");
+    }
+    // Casa pronta: sem fase de obra, o prazo não perde os meses da obra
+    const prazoPronta = Math.min(PARAM.prazoMax, PARAM.idadeLimiteMeses - idade);
+    // Varredura 26/10: a obra desconta da margem de idade, não dos 420 meses (CART-CONST 2.3: amortização de 60 a 420 meses;
+    // idade + obra + amortização ≤ 80a6m). Antes, todo cliente de construção ficava em 408 meses e via o aviso de idade.
+    const prazo = pronta ? prazoPronta : Math.min(PARAM.prazoMax, PARAM.idadeLimiteMeses - idade - PARAM.prazoObraMeses);
+    if (prazo < 60) {
+      outraLinha();
+    } else {
+      const baixo = capacidade(de, taxa, prazo, outras, teto, idade / 12, sbpe);
+      const alto = capacidade(ate, taxa, prazo, outras, teto, idade / 12, sbpe);
+      const deAte = (a, b) => Math.round(a) === Math.round(b) ? brl(a) : `${brl(a)} a ${brl(b)}`;
+      $("rFin").textContent = brl(alto.fin);
+      $("rParcela").textContent = deAte(baixo.parcela, alto.parcela);
+      $("rImovel").textContent = `até ${brl(alto.imovel)}`;
+      $("rPrazo").textContent = `${prazo} meses`;
+      $("rTaxa").textContent = `${pct(taxa)} (efetiva ${pct((Math.pow(1 + taxa / 1200, 12) - 1) * 100)})`;
+      $("rObraIni").textContent = brl(baixo.obraIni);
+      $("rObraFim").textContent = brl(alto.obraFim);
+      if (baixo.fin < alto.fin - 1) avisos.push(`O valor depende de onde a renda fica dentro da faixa: vai de ${brl(baixo.fin)} a ${brl(alto.fin)}.`);
+      if (prazo < PARAM.prazoMax) avisos.push("Pela idade, o prazo fica menor. Incluir alguém mais novo no financiamento pode aumentar o prazo.");
+      if (sbpe) avisos.push("Pelo seu perfil, o financiamento é por outra linha da CAIXA (fora do Minha Casa Minha Vida). Os juros dela variam de 10% a 15% ao ano conforme o relacionamento com o banco: a simulação usa 12,5%, e a CAIXA financia até 70% do imóvel.");
+      if (faixa === 9) avisos.push("Para renda acima de R$ 13 mil, a conta usa R$ 13 mil: com renda maior, o valor financiado sobe.");
+      if (outras > 0) avisos.push("Já descontamos as parcelas que você paga hoje: o total não pode passar de 30% da renda.");
+      if (pronta) {
+        $("cObra").hidden = true;
+        $("lParcela").textContent = "Parcela desde o primeiro mês";
+        $("lImovel").textContent = "Casa que cabe no seu perfil";
+      } else {   // construir: sempre mostra a alternativa de casa pronta
+        const pb = capacidade(de, taxa, prazoPronta, outras, teto, idade / 12, sbpe), pa = capacidade(ate, taxa, prazoPronta, outras, teto, idade / 12, sbpe);
+        $("cPronta").hidden = false;
+        $("rProntaParc").textContent = deAte(pb.parcela, pa.parcela);
+        $("rProntaPrazo").textContent = `${prazoPronta} meses`;
+      }
+      if (!pronta && (q.get("t") === "comprar" || q.get("t") === "financiado")) avisos.push("O terreno entra no mesmo financiamento: a CAIXA paga o terreno na assinatura, e os juros sobre ele começam no primeiro mês.");
+      if (q.get("e") === "s") avisos.push("Lembre: com restrição no nome a CAIXA não aprova. Com o nome limpo, esta simulação vale para você.");
+    }
+  }
+  avisos.forEach(t => { const d = document.createElement("div"); d.className = "aviso"; d.textContent = t; $("rAvisos").appendChild(d); });
+
+  // Resumo completo para o corretor não ficar perdido (o cliente envia do próprio WhatsApp)
+  const ROT = {
+    c: { chapadao: "Chapadão do Sul", costarica: "Costa Rica", paraiso: "Paraíso das Águas", figueirao: "Figueirão" },
+    t: { quitado: "já tem, quitado", financiado: "já tem, financiado", comprar: "vai comprar" },
+    r: ["", "até R$ 2.160", "R$ 2.161 a 2.850", "R$ 2.851 a 3.200", "R$ 3.201 a 3.500", "R$ 3.501 a 4.000",
+        "R$ 4.001 a 5.000", "R$ 5.001 a 9.600", "R$ 9.601 a 13.000", "acima de R$ 13.000"],
+    p: { "0": "não tem", "10": "até 10% da renda", "20": "11% a 20% da renda", "29": "21% a 29% da renda" },
+    s: { "1": "sozinho", "2": "2 pessoas", "3": "3 ou mais" },
+    sn: { s: "sim", n: "não", x: "não sabe" }
+  };
+  // Varredura 26/10: o resumo só mostra data válida (31/02 ou 2030 apareciam como se fossem reais)
+  const nasc = idadeMeses(q.get("n")) !== null ? String(q.get("n") || "").replace(/\D/g, "") : "";
+  const linhas = [
+    `Olá! Vi a minha simulação ${idSim} e quero falar com ${pronta ? "o corretor" : "a construtora"}.`,
+    "",
+    `Procura: ${pega({ construir: "terreno e construção", pronta: "casa pronta" }, q.get("m")) || "terreno e construção"}`,
+    `Cidade: ${pega(ROT.c, q.get("c")) || "não informada"}`,
+    `Renda bruta: ${ROT.r[faixa]} (${pega(ROT.s, q.get("s")) || "não informado"})`,
+    `Outras parcelas: ${pega(ROT.p, q.get("p")) || "não informado"}`,
+    `Restrição no nome: ${pega(ROT.sn, q.get("e")) || "não informado"}`,
+    `Nascimento do mais velho: ${nasc.length >= 6 ? nasc.slice(0, 2) + "/" + nasc.slice(2, 4) + "/" + nasc.slice(4) : "não informado"}`,
+    `3 anos de FGTS: ${pega(ROT.sn, q.get("f")) || "não informado"}`,
+    pronta ? null : `Terreno: ${pega(ROT.t, q.get("t")) || "não informado"}`,
+    `Casa própria na cidade: ${pega(ROT.sn, q.get("h")) || "não informado"}`
+  ];
+  if (!$("cMcmv").hidden) {
+    linhas.push("", `Simulação: financia até ${$("rFin").textContent}`,
+      `Parcela: ${$("rParcela").textContent} · Prazo: ${$("rPrazo").textContent} · Juros: ${$("rTaxa").textContent}`);
+  } else {
+    linhas.push("", "Simulação: outra linha da CAIXA");
+  }
+  const texto = linhas.filter(l => l !== null).join("\n");
+  $("zap").href = `https://wa.me/${PARAM.zapConstrutora}?text=${encodeURIComponent(texto)}`;
+}
+iniciar();
+</script>
+</body>
+</html>
