@@ -81,6 +81,12 @@
         Parcela de <strong id="rProntaParc"></strong>, em até <strong id="rProntaPrazo"></strong>.</p>
     </div>
 
+    <div class="cartao" id="cIdade" hidden>
+      <strong>Pela idade de quem é mais velho, o prazo do financiamento fica curto demais.</strong>
+      <p class="rotulo" style="margin:6px 0 0">Existem outras opções de financiamento, e a construtora te mostra a que serve para o seu caso.
+        Incluir no financiamento alguém mais novo, como um filho ou o cônjuge, também pode resolver.</p>
+    </div>
+
     <div class="cartao" id="cOutra" hidden>
       <strong>Seu financiamento segue por outra linha da CAIXA, com condições próprias.</strong>
       <p class="rotulo" style="margin:6px 0 0">O caminho é o mesmo. A construtora te mostra as condições do seu caso.</p>
@@ -253,7 +259,17 @@ function iniciar() {
     // idade + obra + amortização ≤ 80a6m). Antes, todo cliente de construção ficava em 408 meses e via o aviso de idade.
     const prazo = pronta ? prazoPronta : Math.min(PARAM.prazoMax, PARAM.idadeLimiteMeses - idade - PARAM.prazoObraMeses);
     if (prazo < 60) {
-      outraLinha();
+      // 27/10 (Marcio): idade alta não é "outra linha da CAIXA"; há outras opções em parceria.
+      // Se a casa pronta (sem os 12 meses de obra) ainda cabe no prazo mínimo, mostra a casa pronta.
+      $("cMcmv").hidden = true;
+      $("cObra").hidden = true;
+      $("cIdade").hidden = false;
+      if (!pronta && prazoPronta >= 60) {
+        const pb = capacidade(de, taxa, prazoPronta, outras, teto, idade / 12, sbpe), pa = capacidade(ate, taxa, prazoPronta, outras, teto, idade / 12, sbpe);
+        $("cPronta").hidden = false;
+        $("rProntaParc").textContent = `${brl(pb.parcela)} a ${brl(pa.parcela)}`;
+        $("rProntaPrazo").textContent = `${prazoPronta} meses`;
+      }
     } else {
       const baixo = capacidade(de, taxa, prazo, outras, teto, idade / 12, sbpe);
       const alto = capacidade(ate, taxa, prazo, outras, teto, idade / 12, sbpe);
@@ -316,7 +332,7 @@ function iniciar() {
     linhas.push("", `Simulação: financia até ${$("rFin").textContent}`,
       `Parcela: ${$("rParcela").textContent} · Prazo: ${$("rPrazo").textContent} · Juros: ${$("rTaxa").textContent}`);
   } else {
-    linhas.push("", "Simulação: outra linha da CAIXA");
+    linhas.push("", $("cIdade").hidden ? "Simulação: outra linha da CAIXA" : "Simulação: prazo curto pela idade (ver outras opções)");
   }
   const texto = linhas.filter(l => l !== null).join("\n");
   $("zap").href = `https://wa.me/${PARAM.zapConstrutora}?text=${encodeURIComponent(texto)}`;
