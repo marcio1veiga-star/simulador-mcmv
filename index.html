@@ -4,7 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="format-detection" content="telephone=no">
-<title>Sua Simulação</title>
+<title>Simulador Minha Casa Minha Vida</title>
+<!-- 29/10: cartão de prévia no WhatsApp (Open Graph). O WhatsApp lê a página sem a parte depois do "#", então o cartão é o mesmo para todo mundo. -->
+<meta name="description" content="Veja quanto a CAIXA pode financiar para a sua casa em Chapadão do Sul, Costa Rica, Paraíso das Águas e Figueirão. Simulação gratuita, sem cadastro, sem senha.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Marcio dos Santos Veiga Ltda · Construtora">
+<meta property="og:title" content="Simulador Minha Casa Minha Vida">
+<meta property="og:description" content="Veja quanto a CAIXA pode financiar para a sua casa. Simulação gratuita, sem cadastro, sem senha.">
+<meta property="og:url" content="https://marcio1veiga-star.github.io/simulador-mcmv/">
+<meta property="og:image" content="https://marcio1veiga-star.github.io/simulador-mcmv/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
 <style>
   /* Paleta sem azul (pedido do Marcio): verde-escuro, terra e areia */
   :root {
@@ -87,15 +99,16 @@
         Incluir no financiamento alguém mais novo, como um filho ou o cônjuge, também pode resolver.</p>
     </div>
 
+    <!-- 29/10: mesmo texto das mensagens finais da Zarpon (M34/M35): sem nome de pessoa, com prazo de retorno -->
     <div class="cartao" id="fimConstrutora">
       Essa é uma estimativa, e quem aprova é a CAIXA. Valores de projeto e acompanhamento de obra são tratados direto
-      com a construtora. A documentação pode ser parcelada em até 12x no cartão. O próximo passo é falar com a
-      construtora para ajustar ao seu caso e enviar os documentos pelo link seguro.
+      com a construtora. A documentação pode ser parcelada em até 12x no cartão. Próximo passo: um corretor da nossa
+      equipe vai te chamar no seu WhatsApp em até 1 dia útil, para ajustar a simulação ao seu caso. Se quiser adiantar, toque no botão abaixo.
     </div>
     <div class="cartao" id="fimCorretor" hidden>
       Essa é uma estimativa, e quem aprova é a CAIXA. A documentação pode ser parcelada em até 12x no cartão.
-      O próximo passo é falar com o corretor para ver as casas que cabem no seu perfil e enviar os documentos pelo link seguro.
-      <p class="rotulo" style="margin:8px 0 0">Marcio dos Santos Veiga — Corretor de Imóveis — CRECI-MS 14735</p>
+      Próximo passo: um corretor da nossa equipe (CRECI-MS) vai te chamar no seu WhatsApp em até 1 dia útil, para te mostrar
+      as casas que cabem no seu perfil. Se quiser adiantar, toque no botão abaixo.
     </div>
     <a id="zap" class="zap" target="_blank" rel="noopener">Falar c/ construtora</a>
 
@@ -160,7 +173,30 @@ const brl = v => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL",
 const pct = v => v.toFixed(2).replace(".", ",") + "%";
 // 27/10: os dados vêm depois do "#" (o navegador não envia essa parte ao servidor, então nenhum log guarda renda ou nascimento).
 // O "?" continua aceito para link antigo.
-const qBruto = new URLSearchParams(location.hash.slice(1) || location.search);
+// 29/10: formato compacto, sem telefone nem data de nascimento no link (parecia código de golpe e expunha dado pessoal):
+//   #m-c-s-r-p-e-i-f-t-h   ex.: #1-1-1-6-1-1-42-1-1-1   (i = idade em anos de quem é mais velho)
+// O formato antigo (#id=SIM-...&m=1&...&n=ddmmaaaa) continua aceito para links já enviados.
+const CHAVES_COMPACTO = ["m", "c", "s", "r", "p", "e", "i", "f", "t", "h"];
+function lerParametros() {
+  const h = location.hash.slice(1);
+  if (h && h.indexOf("=") === -1 && /^[\d.,\/-]*$/.test(h)) {
+    let partes = h.split("-");
+    // Se alguém digitou a data com traços (15-03-1985), ela vira 3 pedaços: junta de volta como data
+    if (partes.length === 12 && /^\d{1,2}$/.test(partes[6]) && /^\d{1,2}$/.test(partes[7]) && /^\d{2,4}$/.test(partes[8])) {
+      partes = partes.slice(0, 6).concat([partes[6] + "/" + partes[7] + "/" + partes[8]], partes.slice(9));
+    }
+    const p = new URLSearchParams();
+    CHAVES_COMPACTO.forEach((k, ix) => {
+      const v = partes[ix] === undefined ? "" : partes[ix].trim();
+      if (v === "") return;
+      // posição 7: idade (2 dígitos) ou, em link antigo, data de nascimento (6 a 8 dígitos)
+      if (k === "i" && v.replace(/\D/g, "").length >= 6) p.set("n", v); else p.set(k, v);
+    });
+    return p;
+  }
+  return new URLSearchParams(h || location.search);
+}
+const qBruto = lerParametros();
 // Revisão 27/10: valores em minúsculas (h=S ou m=PRONTA vindos da Zarpon eram ignorados); o id mantém o original
 // 27/10: a Zarpon só grava NÚMERO em variável de botão. Códigos numéricos aceitos (0 = não informado):
 // m 1 construir 2 pronta · c 1 chapadao 2 costarica 3 paraiso 4 figueirao · p 1 n 2 s · e 1 n 2 s 3 x
@@ -178,6 +214,7 @@ const q = { get: k => {
   v = v.trim().toLowerCase().replace(/[.,]0+$/, "");   // número da Zarpon pode vir como "1.0"
   if (k === "r" || k === "s") return v === "0" ? null : v;
   if (k === "n") { const d = v.replace(/\D/g, ""); return d.length === 7 ? "0" + d : d; }   // número perde o zero do dia 01..09
+  if (k === "i") { const d = v.replace(/\D/g, ""); return /^\d{2,3}$/.test(d) && +d >= 18 && +d <= 100 ? d : null; }   // 29/10: idade em anos
   if (COD[k] && /^\d+$/.test(v)) return Object.prototype.hasOwnProperty.call(COD[k], v) ? COD[k][v] : null;
   return v;
 } };
@@ -187,8 +224,9 @@ const pega = (obj, k) => k !== null && Object.prototype.hasOwnProperty.call(obj,
 const idSim = String(q.get("id") || "").replace(/[^A-Za-z0-9-]/g, "").slice(0, 20);
 $("vig").textContent = PARAM.vigencia;
 
-// Parâmetros vindos do link da Zarpon:
-// id=SIM-XXXX m=construir|pronta c=chapadao|costarica|paraiso|figueirao t=quitado|financiado|comprar r=1..9 p=0|10|20|29 n=ddmmaaaa f=s|n|x h=s|n e=n|s|x s=1|2|3
+// Parâmetros vindos do link da Zarpon (formato compacto, 29/10): #m-c-s-r-p-e-i-f-t-h
+// m=1 construir|2 pronta c=1..4 s=1|2|3 r=1..9 p=1 n|2 s e=1 n|2 s|3 x i=idade em anos f=1 s|2 n|3 x t=1 quitado|2 financiado|3 comprar h=1 n|2 s
+// Formato antigo: id=SIM-XXXX m=construir|pronta c=chapadao|... t=... r=1..9 p=... n=ddmmaaaa f=s|n|x h=s|n e=n|s|x s=1|2|3
 function idadeMeses(n) {
   const d = String(n || "").replace(/\D/g, "");
   if (d.length !== 8 && d.length !== 6) return null;
@@ -232,7 +270,8 @@ function capacidade(renda, taxa, prazo, outras, teto, idadeAnos, sbpe = false) {
 
 function iniciar() {
   const faixa = /^[1-9]$/.test(q.get("r") || "") ? +q.get("r") : 0;   // Varredura 26/10: r=1.5 quebrava a página
-  if (!idSim || !faixa) {
+  // 29/10: o id deixou de ser obrigatório (o link compacto não leva o telefone; quem identifica o cliente é o próprio WhatsApp dele)
+  if (!faixa) {
     $("semDados").hidden = false;
     $("zapInicio").href = `https://wa.me/${PARAM.zapAtendimento}`;
     return;
@@ -257,10 +296,12 @@ function iniciar() {
 
     // Prazo: idade + obra + financiamento até 80 anos e 6 meses
     let idade = idadeMeses(q.get("n"));
+    // 29/10: idade em anos (link compacto). Soma 6 meses: na média, quem tem "42 anos" tem 42 anos e meio.
+    if (idade === null && q.get("i")) idade = +q.get("i") * 12 + 6;
     if (idade === null) {
       idade = 44 * 12;
-      avisos.push(q.get("n") ? "A data de nascimento informada não é válida: a simulação considerou o prazo máximo. A construtora confirma com a sua idade."
-                             : "Sem a data de nascimento, a simulação considerou o prazo máximo. A construtora confirma com a sua idade.");
+      avisos.push(q.get("n") || qBruto.get("i") ? "A idade informada não é válida: a simulação considerou o prazo máximo. A construtora confirma com a sua idade."
+                                                : "Sem a idade, a simulação considerou o prazo máximo. A construtora confirma com a sua idade.");
     }
     // Casa pronta: sem fase de obra, o prazo não perde os meses da obra
     const prazoPronta = Math.min(PARAM.prazoMax, PARAM.idadeLimiteMeses - idade);
@@ -326,14 +367,15 @@ function iniciar() {
   // Varredura 26/10: o resumo só mostra data válida (31/02 ou 2030 apareciam como se fossem reais)
   const nasc = idadeMeses(q.get("n")) !== null ? String(q.get("n") || "").replace(/\D/g, "") : "";
   const linhas = [
-    `Olá! Vi a minha simulação ${idSim} e quero falar com ${pronta ? "o corretor" : "a construtora"}.`,
+    `Olá! Vi a minha simulação${idSim ? " " + idSim : ""} e quero falar com ${pronta ? "o corretor" : "a construtora"}.`,
     "",
     `Procura: ${pega({ construir: "terreno e construção", pronta: "casa pronta" }, q.get("m")) || "terreno e construção"}`,
     `Cidade: ${pega(ROT.c, q.get("c")) || "não informada"}`,
     `Renda bruta: ${ROT.r[faixa]} (${pega(ROT.s, q.get("s")) || "pessoas: não informado"})`,
     `Outras parcelas: ${pega(ROT.p, q.get("p")) || "não informado"}`,
     `Restrição no nome: ${pega(ROT.sn, q.get("e")) || "não informado"}`,
-    `Nascimento do mais velho: ${nasc.length >= 6 ? nasc.slice(0, 2) + "/" + nasc.slice(2, 4) + "/" + nasc.slice(4) : "não informado"}`,
+    nasc.length >= 6 ? `Nascimento do mais velho: ${nasc.slice(0, 2) + "/" + nasc.slice(2, 4) + "/" + nasc.slice(4)}`
+                     : `Idade do mais velho: ${q.get("i") ? q.get("i") + " anos" : "não informada"}`,
     `3 anos de FGTS: ${pega(ROT.sn, q.get("f")) || "não informado"}`,
     pronta ? null : `Terreno: ${pega(ROT.t, q.get("t")) || "não informado"}`,
     `Casa própria na cidade: ${pega(ROT.sn, q.get("h")) || "não informado"}`
