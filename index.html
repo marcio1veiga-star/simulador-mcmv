@@ -60,7 +60,7 @@
       Podem mudar para mais ou para menos na análise do banco.</p>
 
     <div class="cartao" id="cMcmv">
-      <div class="rotulo">Com a sua renda, você pode financiar até</div>
+      <div class="rotulo">Estimativa: com a sua renda, você poderia financiar até</div>
       <div class="grande" id="rFin"></div>
       <div class="linha"><span id="lParcela">Parcela depois da casa pronta</span><span id="rParcela"></span></div>
       <div class="linha"><span id="lImovel">Casa + terreno que cabe no seu perfil</span><span id="rImovel"></span></div>
@@ -85,11 +85,6 @@
       <strong>Pela idade de quem é mais velho, o prazo do financiamento fica curto demais.</strong>
       <p class="rotulo" style="margin:6px 0 0">Existem outras opções de financiamento, e a construtora te mostra a que serve para o seu caso.
         Incluir no financiamento alguém mais novo, como um filho ou o cônjuge, também pode resolver.</p>
-    </div>
-
-    <div class="cartao" id="cOutra" hidden>
-      <strong>Seu financiamento segue por outra linha da CAIXA, com condições próprias.</strong>
-      <p class="rotulo" style="margin:6px 0 0">O caminho é o mesmo. A construtora te mostra as condições do seu caso.</p>
     </div>
 
     <div class="cartao" id="fimConstrutora">
@@ -235,12 +230,6 @@ function capacidade(renda, taxa, prazo, outras, teto, idadeAnos, sbpe = false) {
   };
 }
 
-function outraLinha() {
-  $("cMcmv").hidden = true;
-  $("cObra").hidden = true;
-  $("cOutra").hidden = false;
-}
-
 function iniciar() {
   const faixa = /^[1-9]$/.test(q.get("r") || "") ? +q.get("r") : 0;   // Varredura 26/10: r=1.5 quebrava a página
   if (!idSim || !faixa) {
@@ -299,7 +288,8 @@ function iniciar() {
       $("rImovel").textContent = `até ${brl(alto.imovel)}`;
       $("rPrazo").textContent = `${prazo} meses`;
       $("rTaxa").textContent = `${pct(taxa)} (efetiva ${pct((Math.pow(1 + taxa / 1200, 12) - 1) * 100)})`;
-      $("rObraIni").textContent = brl(baixo.obraIni);
+      // 29/10: início e fim pela mesma ponta da faixa (a manchete usa a renda de cima); antes a subida saía exagerada
+      $("rObraIni").textContent = brl(alto.obraIni);
       $("rObraFim").textContent = brl(alto.obraFim);
       if (baixo.fin < alto.fin - 1) avisos.push(`O valor depende de onde a renda fica dentro da faixa: vai de ${brl(baixo.fin)} a ${brl(alto.fin)}.`);
       if (prazo < PARAM.prazoMax) avisos.push("Pela idade, o prazo fica menor. Incluir alguém mais novo no financiamento pode aumentar o prazo.");
@@ -317,7 +307,7 @@ function iniciar() {
         $("rProntaParc").textContent = deAte(pb.parcela, pa.parcela);
         $("rProntaPrazo").textContent = `${prazoPronta} meses`;
       }
-      if (!pronta && (q.get("t") === "comprar" || q.get("t") === "financiado")) avisos.push("O terreno entra no mesmo financiamento: a CAIXA paga o terreno na assinatura, e os juros sobre ele começam no primeiro mês.");
+      if (!pronta && (q.get("t") === "comprar" || q.get("t") === "financiado")) avisos.push("A CAIXA pode incluir o terreno no mesmo financiamento, se aprovar. Nesse caso os juros sobre essa parte começam no primeiro mês.");
       if (q.get("e") === "s") avisos.push("Lembre: com restrição no nome a CAIXA não aprova. Com o nome limpo, a simulação pode ser refeita para o seu caso.");
     }
   }
@@ -352,7 +342,7 @@ function iniciar() {
     linhas.push("", `Simulação: financia até ${$("rFin").textContent}`,
       `Parcela: ${$("rParcela").textContent} · Prazo: ${$("rPrazo").textContent} · Juros: ${$("rTaxa").textContent}`);
   } else {
-    linhas.push("", $("cIdade").hidden ? "Simulação: outra linha da CAIXA" : "Simulação: prazo curto pela idade (ver outras opções)");
+    linhas.push("", "Simulação: prazo curto pela idade (ver outras opções)");
   }
   const texto = linhas.filter(l => l !== null).join("\n");
   $("zap").href = `https://wa.me/${PARAM.zapConstrutora}?text=${encodeURIComponent(texto)}`;
