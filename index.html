@@ -17,6 +17,7 @@
 <meta property="og:image:height" content="630">
 <meta property="og:locale" content="pt_BR">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%232f6b3a'/%3E%3Cpath d='M32 12 8 34h8v18h32V34h8z' fill='%23fff'/%3E%3Crect x='27' y='38' width='10' height='14' fill='%232f6b3a'/%3E%3C/svg%3E">
 <style>
   /* Paleta sem azul (pedido do Marcio): verde-escuro, terra e areia */
   :root {
@@ -178,8 +179,11 @@ const pct = v => v.toFixed(2).replace(".", ",") + "%";
 // O formato antigo (#id=SIM-...&m=1&...&n=ddmmaaaa) continua aceito para links já enviados.
 const CHAVES_COMPACTO = ["m", "c", "s", "r", "p", "e", "i", "f", "t", "h"];
 function lerParametros() {
-  const h = location.hash.slice(1);
-  if (h && h.indexOf("=") === -1 && /^[\d.,\/-]*$/.test(h)) {
+  let h = location.hash.slice(1);
+  try { h = decodeURIComponent(h); } catch (err) { /* mantém como veio */ }
+  // Revisão 29/10 (tarde): sem exigir só dígitos. Se o cliente digitou "42 anos" ou "quarenta" na idade, o resto do link
+  // continua sendo lido e só a idade é tratada como não informada (antes, o link inteiro caía na tela "sem dados").
+  if (h && h.indexOf("=") === -1) {
     let partes = h.split("-");
     // Se alguém digitou a data com traços (15-03-1985), ela vira 3 pedaços: junta de volta como data
     if (partes.length === 12 && /^\d{1,2}$/.test(partes[6]) && /^\d{1,2}$/.test(partes[7]) && /^\d{2,4}$/.test(partes[8])) {
